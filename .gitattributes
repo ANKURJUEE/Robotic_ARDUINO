@@ -1,2 +1,78 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+// Pin Definitions
+const int triggerPin = 2;        // Ultrasonic sensor trigger pin
+const int echoPin = 3;           // Ultrasonic sensor echo pin
+const int tempSensorPin = A0;    // Temperature sensor analog input pin
+const int motor1Pin = 4;         // Motor 1 control pin
+const int motor2Pin = 5;         // Motor 2 control pin
+
+// Constants
+const int maxDistance = 20;      // Maximum distance threshold in centimeters
+const int tempThreshold = 25;    // Temperature threshold value in degrees Celsius
+
+// Variables
+long duration, distance;
+float temperature;
+
+void setup() {
+  // Initialize the serial communication
+  Serial.begin(9600);
+
+  // Set the pin modes
+  pinMode(triggerPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  pinMode(tempSensorPin, INPUT);
+  pinMode(motor1Pin, OUTPUT);
+  pinMode(motor2Pin, OUTPUT);
+}
+
+void loop() {
+  // Measure the distance using the ultrasonic sensor
+  digitalWrite(triggerPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(triggerPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(triggerPin, LOW);
+  duration = pulseIn(echoPin, HIGH);
+  distance = duration * 0.034 / 2;
+
+  // Read the temperature sensor value
+  int tempValue = analogRead(tempSensorPin);
+  temperature = (tempValue * 5.0 / 1023.0 - 0.5) * 100.0;
+
+  // Print sensor values
+  Serial.print("Distance: ");
+  Serial.print(distance);
+  Serial.println(" cm");
+  Serial.print("Temperature: ");
+  Serial.print(temperature);
+  Serial.println(" °C");
+
+  // Check if an obstacle is detected within the maximum distance threshold
+  if (distance <= maxDistance) {
+    // If an obstacle is detected, stop the motors
+    stopMotors();
+  } else {
+    // If no obstacle is detected, check the temperature reading
+    if (temperature > tempThreshold) 
+                                                                              // if it is hot, move the motors forward
+     {                                                                
+      moveForward();
+    } else {
+      // Otherwise, stop the motors
+      stopMotors();
+    }
+  }
+
+  // Delay before the next iteration
+  delay(100);
+}
+
+void moveForward() {
+  digitalWrite(motor1Pin, HIGH);
+  digitalWrite(motor2Pin, HIGH);
+}
+
+void stopMotors() {
+  digitalWrite(motor1Pin, LOW);
+  digitalWrite(motor2Pin, LOW);
+}
